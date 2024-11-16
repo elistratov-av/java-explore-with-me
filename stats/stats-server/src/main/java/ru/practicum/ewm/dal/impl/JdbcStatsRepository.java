@@ -29,7 +29,7 @@ public class JdbcStatsRepository implements StatsRepository {
                 "FROM endpointhits\n" +
                 "WHERE (timestamp >= :start AND timestamp <= :end)" + (checkUri ? " AND (uri IN (:uris))\n" : "\n") +
                 "GROUP BY app, uri\n" +
-                "ORDER BY hit DESC";
+                "ORDER BY hits DESC";
     }
 
     // endregion
