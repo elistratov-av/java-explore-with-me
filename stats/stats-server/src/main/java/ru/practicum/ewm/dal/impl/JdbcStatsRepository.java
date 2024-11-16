@@ -28,7 +28,8 @@ public class JdbcStatsRepository implements StatsRepository {
         return "SELECT app, uri, " + (unique ? "COUNT(DISTINCT ip)" : "COUNT(*)") + " hits\n" +
                 "FROM endpointhits\n" +
                 "WHERE (timestamp >= :start AND timestamp <= :end)" + (checkUri ? " AND (uri IN (:uris))\n" : "\n") +
-                "GROUP BY app, uri";
+                "GROUP BY app, uri\n" +
+                "ORDER BY hit DESC";
     }
 
     // endregion
