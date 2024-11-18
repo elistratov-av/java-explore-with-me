@@ -1,2 +1,3 @@
 # java-explore-with-me
-Template repository for ExploreWithMe project.
+## Диаграмма БД сервера статистики
+![Схема БД приложения StatsServer](/assets/images/ewm-stats.png)
