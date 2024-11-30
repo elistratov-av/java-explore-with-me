@@ -23,7 +23,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handle(final Throwable e) {
+    public ApiError handle(final Exception e) {
         log.warn("Error", e);
         return new ApiError(
                 e.getMessage(),
