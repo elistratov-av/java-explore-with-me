@@ -32,6 +32,21 @@ public class EventController {
     private final EventService eventService;
     protected final StatsClient statsClient;
 
+    private void hit(HttpServletRequest request) {
+        if (request == null) return;
+
+        String uri = request.getRequestURI();
+        String ip = request.getRemoteAddr();
+        LocalDateTime cur = LocalDateTime.now();
+
+        EndpointHitDto endpointHit = new EndpointHitDto();
+        endpointHit.setApp("ewm-main-service");
+        endpointHit.setUri(uri);
+        endpointHit.setIp(ip);
+        endpointHit.setTimestamp(cur);
+        statsClient.hit(endpointHit);
+    }
+
     private void hitAndMerge(EventViews event, HttpServletRequest request) {
         if (request == null) return;
 
@@ -104,6 +119,7 @@ public class EventController {
                 .rangeStart(rangeStart).rangeEnd(rangeEnd)
                 .onlyAvailable(onlyAvailable).sort(sort).build();
         List<EventShortDto> events = eventService.findPublishedBy(params, PageRollRequest.of(from, size));
+        hit(request);
         hitAndMerge(events, request);
         log.info("<== findBy event: count = {}", events.size());
         return events;
