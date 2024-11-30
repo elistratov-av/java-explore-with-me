@@ -24,7 +24,7 @@ public class NewEventDto {
     private String description; // Полное описание события
 
     @NotNull
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate; // Дата и время на которые намечено событие
 
     @NotNull

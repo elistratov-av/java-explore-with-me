@@ -11,6 +11,7 @@ import java.util.List;
 @AnnotateWith(value = Component.class)
 public interface UserMapper {
     UserDto map(User obj);
+
     UserShortDto mapShort(User obj);
 
     @Mapping(target = "id", ignore = true)
