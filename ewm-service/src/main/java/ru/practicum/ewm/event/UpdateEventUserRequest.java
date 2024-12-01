@@ -1,14 +1,12 @@
 package ru.practicum.ewm.event;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class UpdateEventUserRequest {
+@EqualsAndHashCode(callSuper = true)
+public class UpdateEventUserRequest extends UpdateEventRequest {
+/*
     private long id; // Идентификатор события
 
     @Size(min = 20, max = 2000)
@@ -31,8 +29,9 @@ public class UpdateEventUserRequest {
 
     private Boolean requestModeration; // Нужна ли премодерация заявок на участие
 
-    private EventStateUserAction stateAction = null; // Изменение состояния события
-
     @Size(min = 3, max = 120)
     private String title; // Заголовок события
+*/
+
+    private EventStateUserAction stateAction = null; // Изменение состояния события
 }

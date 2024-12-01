@@ -11,16 +11,18 @@ public class EventRequestStatusUpdateResult {
     private List<ParticipationRequestDto> confirmedRequests;
 
     public void addConfirmedRequest(ParticipationRequestDto r) {
-        if (confirmedRequests == null)
+        if (confirmedRequests == null) {
             confirmedRequests = new ArrayList<>();
+        }
         confirmedRequests.add(r);
     }
 
     private List<ParticipationRequestDto> rejectedRequests;
 
     public void addRejectedRequest(ParticipationRequestDto r) {
-        if (rejectedRequests == null)
+        if (rejectedRequests == null) {
             rejectedRequests = new ArrayList<>();
+        }
         rejectedRequests.add(r);
     }
 }

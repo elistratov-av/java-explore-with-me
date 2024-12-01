@@ -141,6 +141,30 @@ public class EventServiceImpl implements EventService {
         return dateTime.isBefore(other);
     }
 
+    private void updateEventFields(Event oldEvent, UpdateEventRequest newEvent) {
+        if (StringUtils.isNoneBlank(newEvent.getAnnotation()))
+            oldEvent.setAnnotation(newEvent.getAnnotation());
+        if (newEvent.getCategory() != null) {
+            Category category = categoryRepository.findById(newEvent.getCategory())
+                    .orElseThrow(() -> new NotFoundException("Категория с id = " + newEvent.getCategory() + " не найдена"));
+            oldEvent.setCategory(category);
+        }
+        if (StringUtils.isNoneBlank(newEvent.getDescription()))
+            oldEvent.setDescription(newEvent.getDescription());
+        if (newEvent.getEventDate() != null)
+            oldEvent.setEventDate(newEvent.getEventDate());
+        if (newEvent.getLocation() != null)
+            oldEvent.setLocation(newEvent.getLocation());
+        if (newEvent.getPaid() != null)
+            oldEvent.setPaid(newEvent.getPaid());
+        if (newEvent.getParticipantLimit() != null)
+            oldEvent.setParticipantLimit(newEvent.getParticipantLimit());
+        if (newEvent.getRequestModeration() != null)
+            oldEvent.setRequestModeration(newEvent.getRequestModeration());
+        if (StringUtils.isNoneBlank(newEvent.getTitle()))
+            oldEvent.setTitle(newEvent.getTitle());
+    }
+
     @Override
     @Transactional
     public EventFullDto update(long initiatorId, UpdateEventUserRequest newEvent) {
@@ -164,25 +188,7 @@ public class EventServiceImpl implements EventService {
                     " чем через два часа от текущего момента");
 
         // если событие найдено и все условия соблюдены, обновляем его содержимое
-        if (StringUtils.isNoneBlank(newEvent.getAnnotation()))
-            oldEvent.setAnnotation(newEvent.getAnnotation());
-        if (newEvent.getCategory() != null) {
-            Category category = categoryRepository.findById(newEvent.getCategory())
-                    .orElseThrow(() -> new NotFoundException("Категория с id = " + newEvent.getCategory() + " не найдена"));
-            oldEvent.setCategory(category);
-        }
-        if (StringUtils.isNoneBlank(newEvent.getDescription()))
-            oldEvent.setDescription(newEvent.getDescription());
-        if (newEvent.getEventDate() != null)
-            oldEvent.setEventDate(newEvent.getEventDate());
-        if (newEvent.getLocation() != null)
-            oldEvent.setLocation(newEvent.getLocation());
-        if (newEvent.getPaid() != null)
-            oldEvent.setPaid(newEvent.getPaid());
-        if (newEvent.getParticipantLimit() != null)
-            oldEvent.setParticipantLimit(newEvent.getParticipantLimit());
-        if (newEvent.getRequestModeration() != null)
-            oldEvent.setRequestModeration(newEvent.getRequestModeration());
+        updateEventFields(oldEvent, newEvent);
         if (newEvent.getStateAction() != null) {
             switch (newEvent.getStateAction()) {
                 case EventStateUserAction.CANCEL_REVIEW:
@@ -195,8 +201,6 @@ public class EventServiceImpl implements EventService {
                     break;
             }
         }
-        if (StringUtils.isNoneBlank(newEvent.getTitle()))
-            oldEvent.setTitle(newEvent.getTitle());
 
         Event event = eventRepository.save(oldEvent);
         return mergeAllStats(eventMapper.map(event));
@@ -217,25 +221,7 @@ public class EventServiceImpl implements EventService {
         }
 
         // если событие найдено и все условия соблюдены, обновляем его содержимое
-        if (StringUtils.isNoneBlank(newEvent.getAnnotation()))
-            oldEvent.setAnnotation(newEvent.getAnnotation());
-        if (newEvent.getCategory() != null) {
-            Category category = categoryRepository.findById(newEvent.getCategory())
-                    .orElseThrow(() -> new NotFoundException("Категория с id = " + newEvent.getCategory() + " не найдена"));
-            oldEvent.setCategory(category);
-        }
-        if (StringUtils.isNoneBlank(newEvent.getDescription()))
-            oldEvent.setDescription(newEvent.getDescription());
-        if (newEvent.getEventDate() != null)
-            oldEvent.setEventDate(newEvent.getEventDate());
-        if (newEvent.getLocation() != null)
-            oldEvent.setLocation(newEvent.getLocation());
-        if (newEvent.getPaid() != null)
-            oldEvent.setPaid(newEvent.getPaid());
-        if (newEvent.getParticipantLimit() != null)
-            oldEvent.setParticipantLimit(newEvent.getParticipantLimit());
-        if (newEvent.getRequestModeration() != null)
-            oldEvent.setRequestModeration(newEvent.getRequestModeration());
+        updateEventFields(oldEvent, newEvent);
         if (newEvent.getStateAction() != null) {
             switch (newEvent.getStateAction()) {
                 case EventStateAdminAction.PUBLISH_EVENT: {
@@ -259,8 +245,6 @@ public class EventServiceImpl implements EventService {
                 break;
             }
         }
-        if (StringUtils.isNoneBlank(newEvent.getTitle()))
-            oldEvent.setTitle(newEvent.getTitle());
 
         Event event = eventRepository.save(oldEvent);
         return mergeAllStats(eventMapper.map(event));
@@ -352,7 +336,9 @@ public class EventServiceImpl implements EventService {
         if (newStatusRequest.getStatus() == RequestStatusAction.REJECTED) {
             for (Request r : requests) {
                 r.setStatus(RequestStatus.REJECTED);
-                Request request = requestRepository.save(r);
+            }
+
+            for (Request request : requestRepository.saveAll(requests)) {
                 result.addRejectedRequest(requestMapper.map(request));
             }
             return result;
@@ -371,16 +357,21 @@ public class EventServiceImpl implements EventService {
         for (int i = 0; i < maxConfirmCount; ++i) {
             Request r = requests.get(i);
             r.setStatus(RequestStatus.CONFIRMED);
-            Request request = requestRepository.save(r);
-            result.addConfirmedRequest(requestMapper.map(request));
         }
 
         int count = requests.size();
         for (int i = maxConfirmCount; i < count; ++i) {
             Request r = requests.get(i);
             r.setStatus(RequestStatus.REJECTED);
-            Request request = requestRepository.save(r);
-            result.addRejectedRequest(requestMapper.map(request));
+        }
+
+        for (Request request : requestRepository.saveAll(requests)) {
+            ParticipationRequestDto r = requestMapper.map(request);
+            if (r.getStatus() == RequestStatus.CONFIRMED) {
+                result.addConfirmedRequest(r);
+            } else {
+                result.addRejectedRequest(r);
+            }
         }
 
         return result;
