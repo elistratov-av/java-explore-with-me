@@ -13,12 +13,12 @@ import ru.practicum.ewm.StatsClient;
 import ru.practicum.ewm.ViewStatsDto;
 import ru.practicum.ewm.category.Category;
 import ru.practicum.ewm.category.CategoryRepository;
+import ru.practicum.ewm.comment.CommentRepository;
 import ru.practicum.ewm.data.domain.PageRollRequest;
 import ru.practicum.ewm.exception.ConditionsNotMetException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.request.ParticipationRequestDto;
 import ru.practicum.ewm.request.Request;
-import ru.practicum.ewm.request.RequestCountByEvent;
 import ru.practicum.ewm.request.RequestMapper;
 import ru.practicum.ewm.request.RequestRepository;
 import ru.practicum.ewm.request.RequestStatus;
@@ -41,6 +41,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
+    private final CommentRepository commentRepository;
     private final EventMapper eventMapper;
     private final RequestMapper requestMapper;
 
@@ -89,24 +90,43 @@ public class EventServiceImpl implements EventService {
 
     private void mergeConfirmedRequests(List<? extends EventConfirmedRequests> events) {
         List<Long> eventIds = events.stream().map(EventConfirmedRequests::getId).collect(Collectors.toList());
-        List<RequestCountByEvent> counts = requestRepository
+        List<CountByEvent> counts = requestRepository
                 .countByStatusRequests(eventIds, RequestStatus.CONFIRMED);
         Map<Long, Long> countByEvents = counts.stream()
-                .collect(Collectors.toMap(RequestCountByEvent::getEventId, RequestCountByEvent::getCount));
+                .collect(Collectors.toMap(CountByEvent::getEventId, CountByEvent::getCount));
         for (EventConfirmedRequests e : events) {
             e.setConfirmedRequests(countByEvents.getOrDefault(e.getId(), 0L));
+        }
+    }
+
+    private void mergeCountComments(EventCountComments event) {
+        event.setCountComments(
+                commentRepository.countByEventId(event.getId())
+        );
+    }
+
+    private void mergeCountComments(List<? extends EventCountComments> events) {
+        List<Long> eventIds = events.stream().map(EventCountComments::getId).collect(Collectors.toList());
+        List<CountByEvent> counts = commentRepository
+                .countByEvents(eventIds);
+        Map<Long, Long> countByEvents = counts.stream()
+                .collect(Collectors.toMap(CountByEvent::getEventId, CountByEvent::getCount));
+        for (EventCountComments e : events) {
+            e.setCountComments(countByEvents.getOrDefault(e.getId(), 0L));
         }
     }
 
     private <T extends EventStats> T mergeAllStats(T event) {
         mergeHits(event);
         mergeConfirmedRequests(event);
+        mergeCountComments(event);
         return event;
     }
 
     private <T extends EventStats> List<T> mergeAllStats(List<T> events) {
         mergeHits(events);
         mergeConfirmedRequests(events);
+        mergeCountComments(events);
         return events;
     }
 
@@ -286,6 +306,7 @@ public class EventServiceImpl implements EventService {
                     eventRepository.findAll();
             List<EventShortDto> resultEvents = pageAndSortbyViews(eventMapper.mapShort(events), pageable);
             mergeConfirmedRequests(resultEvents);
+            mergeCountComments(resultEvents);
             return resultEvents;
         }
 
@@ -296,6 +317,7 @@ public class EventServiceImpl implements EventService {
                 eventRepository.findAll(pageable);
         List<EventShortDto> resultEvents = eventMapper.mapShort(events.getContent());
         mergeConfirmedRequests(resultEvents);
+        mergeCountComments(resultEvents);
         return resultEvents;
     }
 
@@ -308,6 +330,7 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Событие с id = " + id + " не опубликовано");
         EventFullDto resultEvent = eventMapper.map(event);
         mergeConfirmedRequests(resultEvent);
+        mergeCountComments(resultEvent);
         return resultEvent;
     }
 

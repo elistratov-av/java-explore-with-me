@@ -43,4 +43,6 @@ public class EventFullDto implements EventStats {
     private String title; // Заголовок события
 
     private long views; // Количество просмотров события
+
+    private long countComments; // Количество комментариев по событию
 }

@@ -27,4 +27,6 @@ public class EventShortDto implements EventStats {
     private String title; // Заголовок события
 
     private long views; // Количество просмотрев события
+
+    private long countComments; // Количество комментариев по событию
 }
