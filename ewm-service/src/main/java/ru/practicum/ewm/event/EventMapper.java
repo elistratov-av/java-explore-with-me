@@ -18,6 +18,7 @@ public interface EventMapper {
     @Mapping(target = "createdOn", source = "created")
     @Mapping(target = "publishedOn", source = "published")
     @Mapping(target = "views", ignore = true)
+    @Mapping(target = "countComments", ignore = true)
     EventFullDto map(Event obj);
 
     @Mapping(target = "id", ignore = true)
@@ -30,6 +31,7 @@ public interface EventMapper {
 
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
+    @Mapping(target = "countComments", ignore = true)
     EventShortDto mapShort(Event obj);
 
     List<EventShortDto> mapShort(Iterable<Event> events);
